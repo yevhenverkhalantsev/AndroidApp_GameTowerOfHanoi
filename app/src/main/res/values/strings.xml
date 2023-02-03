@@ -3,6 +3,7 @@
     <string name="todo">TODO</string>
     <string name="drag_drop_tip">Flytt ringene til høyre tårn raskets mulig</string>
     <string name="start_again">START PÅ NYTT</string>
+    <string name="set_moves_text" translatable="false">Antal flytt: %1$d</string>
     <string name="moves_text">Antal flytt: 0</string>
     <string name="you_can_drag_only_top">Du kan dra bare toppen!</string>
 </resources>

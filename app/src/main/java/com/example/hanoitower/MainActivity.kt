@@ -14,32 +14,40 @@ import android.view.DragEvent
 import android.view.MotionEvent
 import android.view.View
 import android.widget.Button
+import android.widget.Chronometer
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
 
+
 class MainActivity : AppCompatActivity() {
+
     private lateinit var myOrangeOval: ImageView
     private lateinit var myBlueOval: ImageView
     private lateinit var myRedOval: ImageView
     private lateinit var tower1: LinearLayout
     private lateinit var tower2: LinearLayout
     private lateinit var tower3: LinearLayout
-    private lateinit var spendTime: TextView
+    private lateinit var spendTime: Chronometer
     private lateinit var movesText: TextView
     private lateinit var startAgainButt: Button
 
-
     private var moves = 0
-    private var drag_exited = false
+    private var dragExited = false
 
-    @SuppressLint("ClickableViewAccessibility") //@TODO fix
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        startProgram()
+    }
+
+    @Suppress("DEPRECATION")
+    @SuppressLint("ClickableViewAccessibility")
+    private fun startProgram() {
         setContentView(R.layout.activity_main)
 
+        moves = 0
         tower1 = this.findViewById(R.id.linear1)
         tower1.setOnDragListener(MyOnDragListener())
 
@@ -50,34 +58,49 @@ class MainActivity : AppCompatActivity() {
         tower3.setOnDragListener(MyOnDragListener())
 
         myOrangeOval = this.findViewById(R.id.orangeRing)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            myOrangeOval.tag = getColor(R.color.my_orange)
+        }
+        else {
+            myOrangeOval.tag = resources.getColor(R.color.my_orange)
+        }
         myBlueOval = this.findViewById(R.id.blueRing)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            myBlueOval.tag = getColor(R.color.my_blue)
+        }
+        else {
+            myBlueOval.tag = resources.getColor(R.color.my_blue)
+        }
+
         myRedOval = this.findViewById(R.id.redRing)
-        //val temp = MyOnTouchListener()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            myRedOval.tag = getColor(R.color.my_red)
+        }
+        else {
+            myRedOval.tag = resources.getColor(R.color.my_orange)
+        }
 
         myRedOval.setOnTouchListener(MyOnTouchListener())
-        //myRedOval.setOnDragListener(MyOnDragListener())
-
         myBlueOval.setOnTouchListener(MyOnTouchListener())
-
         myOrangeOval.setOnTouchListener(MyOnTouchListener())
 
         movesText = this.findViewById(R.id.movesText)
         spendTime = this.findViewById(R.id.spendTime)
         startAgainButt = this.findViewById(R.id.startAgainButton)
 
-        startAgainButt.setOnClickListener { startAgain() }
+        spendTime.format = "Time spent: 00:%s"
 
+        startAgainButt.setOnClickListener { startProgram() }
 
-    }
-
-    private fun startAgain() {
-        //@TODO
+        spendTime.start()
     }
 
 
     inner class MyOnTouchListener: View.OnTouchListener {
+        @SuppressLint("ClickableViewAccessibility")
         override fun onTouch(viewToBeDragged: View, motionEvent: MotionEvent): Boolean {
             Log.i("test", "onTouch!")
+
             val owner = viewToBeDragged.parent as LinearLayout
             val top = owner.getChildAt(0)
             return if (viewToBeDragged == top || owner.childCount == 1) {
@@ -108,6 +131,7 @@ class MainActivity : AppCompatActivity() {
                 Log.i("test", "OnTouch = False")
                 false
             }
+
         }
 
 
@@ -116,8 +140,8 @@ class MainActivity : AppCompatActivity() {
     inner class MyOnDragListener: View.OnDragListener {
         override fun onDrag(view: View, dragEvent: DragEvent): Boolean {
             Log.i("test", "onDrag!")
+
             val action = dragEvent.action
-            var cancelDrag = false
             val receiveContainer = view as LinearLayout
 
             when (action) {
@@ -130,8 +154,6 @@ class MainActivity : AppCompatActivity() {
                     view.background = AppCompatResources.getDrawable(this@MainActivity, R.drawable.tower_shape_droptarget)
                 }
                 DragEvent.ACTION_DRAG_EXITED -> {
-
-                    drag_exited = true
 
                     Log.i("test", "Action drag exited!")
                     view.background = AppCompatResources.getDrawable(this@MainActivity, R.drawable.tower_shape)
@@ -146,6 +168,9 @@ class MainActivity : AppCompatActivity() {
                         parentLayout.removeView(draggedRing)
                         receiveContainer.addView(draggedRing)
                         Log.i("test", "OnDragDrop = True (Null)")
+
+                        isGameFinished(receiveContainer)
+                        dragExited = true
                         return true }
                     else {
                         if (topElement.width > draggedRing.width) {
@@ -153,6 +178,8 @@ class MainActivity : AppCompatActivity() {
                             val parentLayout = draggedRing.parent as LinearLayout
                             parentLayout.removeView(draggedRing)
                             receiveContainer.addView(draggedRing, 0)
+                            isGameFinished(receiveContainer)
+                            dragExited = true
                             return true
                         }
                         Log.i("test", "OnDragDrop false")
@@ -162,15 +189,15 @@ class MainActivity : AppCompatActivity() {
                 DragEvent.ACTION_DRAG_ENDED -> {
                     Log.i("test", "Action drag ended!")
 
-                    if (drag_exited) {
+                    if (dragExited) {
 
                         moves += 1
 
                         Log.i("test", "Moves: $moves")
 
-                        movesText.setText("Moves: $moves")
+                        movesText.text = getString(R.string.set_moves_text, moves)
 
-                        drag_exited = false
+                        dragExited = false
 
                     }
 
@@ -183,13 +210,39 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun isGameFinished(receiveContainer: LinearLayout) {
+        if (receiveContainer == tower3) {
+            if (receiveContainer.childCount > 2) {
+                finishProgram()
+            }
+        }
+    }
+
+    private fun finishProgram() {
+        tower3.background = AppCompatResources.getDrawable(this, R.drawable.tower_shape)
+        removeGameListeners()
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun removeGameListeners() {
+        tower1.setOnDragListener(null)
+        tower2.setOnDragListener(null)
+        tower3.setOnDragListener(null)
+
+        myOrangeOval.setOnTouchListener(null)
+        myBlueOval.setOnTouchListener(null)
+        myRedOval.setOnTouchListener(null)
+        spendTime.stop()
+    }
+
     private class MyDragShadowBuilder(v: View) : View.DragShadowBuilder(v) {
 
-        private val shadow = ColorDrawable((v as ImageView).solidColor)
+        private val shadow: ColorDrawable = ColorDrawable(v.solidColor)
 
         // Defines a callback that sends the drag shadow dimensions and touch point
         // back to the system.
         override fun onProvideShadowMetrics(size: Point, touch: Point) {
+
 
             // Set the width of the shadow to half the width of the original View.
             val width: Int = view.width
@@ -200,6 +253,7 @@ class MainActivity : AppCompatActivity() {
             // The drag shadow is a ColorDrawable. This sets its dimensions to be the
             // same as the Canvas that the system provides. As a result, the drag shadow
             // fills the Canvas.
+            shadow.color = this.view.tag as Int
             shadow.setBounds(0, 0, width, height)
 
             // Set the size parameter's width and height values. These get back to
