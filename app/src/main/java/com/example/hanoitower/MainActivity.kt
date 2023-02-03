@@ -13,18 +13,27 @@ import android.util.Log
 import android.view.DragEvent
 import android.view.MotionEvent
 import android.view.View
-import android.widget.*
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var myOrangeOval: View
-    private lateinit var myBlueOval: View
-    private lateinit var myRedOval: View
+    private lateinit var myOrangeOval: ImageView
+    private lateinit var myBlueOval: ImageView
+    private lateinit var myRedOval: ImageView
     private lateinit var tower1: LinearLayout
     private lateinit var tower2: LinearLayout
     private lateinit var tower3: LinearLayout
-    private lateinit var spendTime: Chronometer
+    private lateinit var spendTime: TextView
+    private lateinit var movesText: TextView
     private lateinit var startAgainButt: Button
+
+
+    private var moves = 0
+    private var drag_exited = false
 
     @SuppressLint("ClickableViewAccessibility") //@TODO fix
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,7 +52,7 @@ class MainActivity : AppCompatActivity() {
         myOrangeOval = this.findViewById(R.id.orangeRing)
         myBlueOval = this.findViewById(R.id.blueRing)
         myRedOval = this.findViewById(R.id.redRing)
-        val temp = MyOnTouchListener()
+        //val temp = MyOnTouchListener()
 
         myRedOval.setOnTouchListener(MyOnTouchListener())
         //myRedOval.setOnDragListener(MyOnDragListener())
@@ -52,6 +61,7 @@ class MainActivity : AppCompatActivity() {
 
         myOrangeOval.setOnTouchListener(MyOnTouchListener())
 
+        movesText = this.findViewById(R.id.movesText)
         spendTime = this.findViewById(R.id.spendTime)
         startAgainButt = this.findViewById(R.id.startAgainButton)
 
@@ -109,6 +119,7 @@ class MainActivity : AppCompatActivity() {
             val action = dragEvent.action
             var cancelDrag = false
             val receiveContainer = view as LinearLayout
+
             when (action) {
                 DragEvent.ACTION_DRAG_STARTED -> {
                     Log.i("test", "Action drag started!")
@@ -119,6 +130,9 @@ class MainActivity : AppCompatActivity() {
                     view.background = AppCompatResources.getDrawable(this@MainActivity, R.drawable.tower_shape_droptarget)
                 }
                 DragEvent.ACTION_DRAG_EXITED -> {
+
+                    drag_exited = true
+
                     Log.i("test", "Action drag exited!")
                     view.background = AppCompatResources.getDrawable(this@MainActivity, R.drawable.tower_shape)
                 }
@@ -138,7 +152,7 @@ class MainActivity : AppCompatActivity() {
                             Log.i("test", "OnDragDrop top>Dragged = ${topElement.width > draggedRing.width}")
                             val parentLayout = draggedRing.parent as LinearLayout
                             parentLayout.removeView(draggedRing)
-                            receiveContainer.addView(draggedRing)
+                            receiveContainer.addView(draggedRing, 0)
                             return true
                         }
                         Log.i("test", "OnDragDrop false")
@@ -147,10 +161,22 @@ class MainActivity : AppCompatActivity() {
                 }
                 DragEvent.ACTION_DRAG_ENDED -> {
                     Log.i("test", "Action drag ended!")
+
+                    if (drag_exited) {
+
+                        moves += 1
+
+                        Log.i("test", "Moves: $moves")
+
+                        movesText.setText("Moves: $moves")
+
+                        drag_exited = false
+
+                    }
+
                     view.background = AppCompatResources.getDrawable(this@MainActivity, R.drawable.tower_shape)
                 }
-                else -> {
-                    Log.i("test", "Else!")}
+                else -> {Log.i("test", "Else!")}
 
             }
             return true
@@ -159,7 +185,7 @@ class MainActivity : AppCompatActivity() {
 
     private class MyDragShadowBuilder(v: View) : View.DragShadowBuilder(v) {
 
-        private val shadow = ColorDrawable(v.solidColor)
+        private val shadow = ColorDrawable((v as ImageView).solidColor)
 
         // Defines a callback that sends the drag shadow dimensions and touch point
         // back to the system.
