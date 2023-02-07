@@ -6,4 +6,5 @@
     <string name="moves_text">Antal flytt: 0</string>
     <string name="you_can_drag_only_top">Du kan dra bare toppen!</string>
     <string name="todo">TODO</string>
+    <string name="u_won_message" translatable="false">DIGG!\n🤟🤟🤟</string>
 </resources>

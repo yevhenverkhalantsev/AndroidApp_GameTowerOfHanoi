@@ -5,11 +5,10 @@ import android.content.ClipData
 import android.content.ClipDescription
 import android.graphics.Canvas
 import android.graphics.Point
-import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.DragEvent
 import android.view.MotionEvent
 import android.view.View
@@ -21,7 +20,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
 
-
+// Class that represents the main activity of the app (the game)
 class MainActivity : AppCompatActivity() {
 
     private lateinit var myOrangeOval: ImageView // Instance of orange oval
@@ -36,6 +35,7 @@ class MainActivity : AppCompatActivity() {
 
     private var moves = 0 // Number of moves
     private var dragExited = false // Boolean that checks if the oval has been dragged out of the tower
+    private lateinit var endGamingDialog: EndGamingDialogue
 
     // Function that called when the activity is created
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,17 +44,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     // Function that sets the initial conditions for the game
-    private fun startProgram() {
+    fun startProgram() {
         setContentView(R.layout.activity_main) // Set the layout to activity_main.xml
         initVariables()
         setTagsForOvals()
         setDragListeners(MyOnDragListener())
         setOnTouchListeners(MyOnTouchListener())
         launchTimeCounter()
-
         movesText.text = getString(R.string.set_moves_text, 0)
-
-        //
+        // Set the listener for the button that starts the game again
         startAgainButt.setOnClickListener { startProgram() }
     }
     // Function that sets the initial conditions for the chronometer
@@ -79,21 +77,9 @@ class MainActivity : AppCompatActivity() {
     }
     //
     private fun setTagsForOvals() {
-        setTagView(myOrangeOval, R.color.my_orange)
-        setTagView(myBlueOval, R.color.my_blue)
-        setTagView(myRedOval, R.color.my_red)
-    }
-
-    // Function that sets the tag of the oval
-    @Suppress("DEPRECATION")
-    private fun setTagView(myView: View, color: Int ) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) { // Check if the version of the SDK is
-            // higher than M
-            myView.tag = getColor(color)
-        }
-        else { // If the version of the SDK is lower than M
-            myView.tag = resources.getColor(color)
-        }
+        myOrangeOval.tag = R.drawable.orange_ring
+        myBlueOval.tag = R.drawable.blue_ring
+        myRedOval.tag = R.drawable.red_ring
     }
 
     // Function that initializes the variables and find by the id in the layout
@@ -117,15 +103,12 @@ class MainActivity : AppCompatActivity() {
     inner class MyOnTouchListener: View.OnTouchListener {
         @SuppressLint("ClickableViewAccessibility") // Suppress the warning about the onTouch function
         override fun onTouch(viewToBeDragged: View, motionEvent: MotionEvent): Boolean {
-            Log.i("test", "onTouch!")
 
             val owner = viewToBeDragged.parent as LinearLayout
             val top = owner.getChildAt(0)
             return if (viewToBeDragged == top || owner.childCount == 1) {
-                Log.i("test", "OnTouch = True")
                 // Create a new ClipData.Item from the ImageView object's tag.
                 val item = ClipData.Item(viewToBeDragged.tag as? CharSequence)
-
                 // Create a new ClipData using the tag as a label, the plain text MIME type, and
                 // the already-created item. This creates a new ClipDescription object within the
                 // ClipData and sets its MIME type to "text/plain".
@@ -146,39 +129,32 @@ class MainActivity : AppCompatActivity() {
             }
             else {
                 Toast.makeText(this@MainActivity, getString(R.string.you_can_drag_only_top), Toast.LENGTH_SHORT).show()
-                Log.i("test", "OnTouch = False")
                 false
             }
 
         }
-
 
     }
 
     // Listener for the event on dragging ovals
     inner class MyOnDragListener: View.OnDragListener {
         override fun onDrag(view: View, dragEvent: DragEvent): Boolean {
-            Log.i("test", "onDrag!")
 
             val action = dragEvent.action
             val receiveContainer = view as LinearLayout
 
             when (action) { // Check the action of the drag event
                 DragEvent.ACTION_DRAG_STARTED -> { // If the drag event is started
-                    Log.i("test", "Action drag started!")
                 }
                 DragEvent.ACTION_DRAG_ENTERED -> { // If the drag event is entering to other tower space
-                    Log.i("test", "Action drag entered!")
                     view.background = AppCompatResources.getDrawable(this@MainActivity, R.drawable.tower_shape_droptarget)
                 }
                 DragEvent.ACTION_DRAG_EXITED -> { // If the drag event is exiting from the current tower space
 
-                    Log.i("test", "Action drag exited!")
                     view.background = AppCompatResources.getDrawable(this@MainActivity, R.drawable.tower_shape)
-
                 }
                 DragEvent.ACTION_DROP -> { // If the drag event is dropped
-                    Log.i("test", "Action drop!")
+
                     val topElement: View? = receiveContainer.getChildAt(0) ?: null
                     val draggedRing = dragEvent.localState as ImageView
 
@@ -186,14 +162,11 @@ class MainActivity : AppCompatActivity() {
                         val parentLayout = draggedRing.parent as LinearLayout
                         parentLayout.removeView(draggedRing)
                         receiveContainer.addView(draggedRing)
-                        Log.i("test", "OnDragDrop = True (Null)")
-
                         isGameFinished(receiveContainer)
                         dragExited = true
                         return true }
                     else {
                         if (topElement.width > draggedRing.width) {
-                            Log.i("test", "OnDragDrop top>Dragged = ${topElement.width > draggedRing.width}")
                             val parentLayout = draggedRing.parent as LinearLayout
                             parentLayout.removeView(draggedRing)
                             receiveContainer.addView(draggedRing, 0)
@@ -201,28 +174,19 @@ class MainActivity : AppCompatActivity() {
                             dragExited = true
                             return true
                         }
-                        Log.i("test", "OnDragDrop false")
                         return false
                     }
                 }
                 DragEvent.ACTION_DRAG_ENDED -> { // If the drag event is ended
-                    Log.i("test", "Action drag ended!")
 
                     if (dragExited) { // If the drag event is ended and the oval has migrated to another tower space
-
                         moves += 1 // Increase the number of moves
-
-                        Log.i("test", "Moves: $moves") // Print the number of moves
-
                         movesText.text = getString(R.string.set_moves_text, moves) // Set the text of the moves text view
-
                         dragExited = false // Set the dragExited variable to false (Now any oval has not migrated to another tower space)
-
                     }
-
                     view.background = AppCompatResources.getDrawable(this@MainActivity, R.drawable.tower_shape)
                 }
-                else -> {Log.i("test", "Else!")}
+                else -> {}
 
             }
             return true
@@ -246,6 +210,8 @@ class MainActivity : AppCompatActivity() {
         tower3.background = AppCompatResources.getDrawable(this, R.drawable.tower_shape) //
         // Set the background of the tower3 to the default background
         removeGameListeners()
+        endGamingDialog = EndGamingDialogue()
+        endGamingDialog.show(supportFragmentManager, "EndDialogGaming")
     }
 
     // Function to remove the listeners
@@ -264,12 +230,11 @@ class MainActivity : AppCompatActivity() {
     // Class to create the shadow of the oval
     private class MyDragShadowBuilder(v: View) : View.DragShadowBuilder(v) {
 
-        private val shadow: ColorDrawable = ColorDrawable(v.solidColor) // Create a shadow of the oval
+        private val shadow: Drawable = AppCompatResources.getDrawable(v.context, v.tag as Int)!!
 
         // Defines a callback that sends the drag shadow dimensions and touch point
         // back to the system.
         override fun onProvideShadowMetrics(size: Point, touch: Point) {
-
 
             // Set the width of the shadow to half the width of the original View.
             val width: Int = view.width
@@ -280,7 +245,7 @@ class MainActivity : AppCompatActivity() {
             // The drag shadow is a ColorDrawable. This sets its dimensions to be the
             // same as the Canvas that the system provides. As a result, the drag shadow
             // fills the Canvas.
-            shadow.color = this.view.tag as Int
+
             shadow.setBounds(0, 0, width, height)
 
             // Set the size parameter's width and height values. These get back to
@@ -299,8 +264,6 @@ class MainActivity : AppCompatActivity() {
             shadow.draw(canvas)
         }
     }
-
-
 
 }
 
