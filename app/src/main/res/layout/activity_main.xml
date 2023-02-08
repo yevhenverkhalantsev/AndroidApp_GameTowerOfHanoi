@@ -49,10 +49,7 @@
                 android:scaleType="fitXY"
                 android:contentDescription="@string/todo"/>
 
-
-
         </LinearLayout>
-
 
         <LinearLayout
             android:id="@+id/linear2"
@@ -66,7 +63,6 @@
             android:background="@drawable/ic_action_tower_back">
         </LinearLayout>
 
-
         <LinearLayout
             android:id="@+id/linear3"
             android:layout_width="0dp"
@@ -79,12 +75,7 @@
             android:background="@drawable/ic_action_tower_back">
         </LinearLayout>
 
-
-
-
-
     </LinearLayout>
-
 
     <TextView
         android:layout_width="wrap_content"
@@ -112,6 +103,5 @@
         android:textSize="18sp"
         android:textAllCaps="false"
         android:text="@string/start_again"/>
-
 
 </LinearLayout>

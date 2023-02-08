@@ -20,70 +20,63 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
 
-// Class that represents the main activity of the app (the game)
+// Class som implementerer OnTouchListener for å lytte på hendelser på berøringer.
+// Denne klassen er en indre klasse til MainActivity og har tilgang til variabler i MainActivity.
+// MainActivity utvider AppCompatActivity og har tilgang til alle funksjoner i AppCompatActivity.
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var myOrangeOval: ImageView // Instance of orange oval
-    private lateinit var myBlueOval: ImageView // Instance of blue oval
-    private lateinit var myRedOval: ImageView // Instance of red oval
-    private lateinit var tower1: LinearLayout // Instance of tower 1
-    private lateinit var tower2: LinearLayout // Instance of tower 2
-    private lateinit var tower3: LinearLayout // Instance of tower 3
-    private lateinit var spendTime: Chronometer // Chronometer that counts the time spent on the game
-    private lateinit var movesText: TextView // TextView that shows the number of moves
-    private lateinit var startAgainButt: Button // Button that starts the game again
+    private lateinit var myOrangeOval: ImageView // Forekomst av alle tre ovals og tårnene
+    private lateinit var myBlueOval: ImageView
+    private lateinit var myRedOval: ImageView
+    private lateinit var tower1: LinearLayout
+    private lateinit var tower2: LinearLayout
+    private lateinit var tower3: LinearLayout
 
-    private var moves = 0 // Number of moves
-    private var dragExited = false // Boolean that checks if the oval has been dragged out of the tower
-    private lateinit var endGamingDialog: EndGamingDialogue
+    private lateinit var spendTime: Chronometer // taletid som viser hvor lang tid det tar å løse problemet
+    private lateinit var movesText: TextView // som viser antall flyttinger
+    private lateinit var startAgainButt: Button // knapp som starter spillet på nytt
 
-    // Function that called when the activity is created
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState) // Call onCreate from the super class (AppCompatActivity)
-        startProgram() // Start the program
+    private var moves = 0 // første flyttingen er 0
+    private var dragExited = false // Boolean som sjekker om en oval er sluppet utenfor tårnet
+    private lateinit var endGamingDialog: EndGamingDialogue // Dialog som vises når spillet er ferdig
+
+    override fun onCreate(savedInstanceState: Bundle?) { // Kjører når aktiviteten starter opp
+        super.onCreate(savedInstanceState) // kall til superklassen sin onCreate funksjon
+        startProgram() // Kjører startProgram funksjonen
     }
 
-    // Function that sets the initial conditions for the game
-    fun startProgram() {
-        setContentView(R.layout.activity_main) // Set the layout to activity_main.xml
-        initVariables()
-        setTagsForOvals()
-        setDragListeners(MyOnDragListener())
-        setOnTouchListeners(MyOnTouchListener())
-        launchTimeCounter()
-        movesText.text = getString(R.string.set_moves_text, 0)
-        // Set the listener for the button that starts the game again
-        startAgainButt.setOnClickListener { startProgram() }
+    fun startProgram() { // Funksjon som starter spillet på nytt
+        setContentView(R.layout.activity_main) // Setter layoutet til aktiviteten
+        initVariables() // Initialiserer variablene
+        setTagsForOvals() // Setter tagger for ovals
+        setDragListeners(MyOnDragListener()) // Setter lytter for drag events
+        setOnTouchListeners(MyOnTouchListener()) // Setter lytter for touch events
+        launchTimeCounter() // Starter taletiden
+        movesText.text = getString(R.string.set_moves_text, 0) // Setter teksten for antall flyttinger
+        startAgainButt.setOnClickListener { startProgram() } // Lytter for klikk på start på nytt knappen
     }
-    // Function that sets the initial conditions for the chronometer
-    private fun launchTimeCounter() {
-        spendTime.format = "Brukt tid: 00:%s" // Set the format of the chronometer output
-        spendTime.start() // Start the chronometer
+    private fun launchTimeCounter() { // Funksjon som starter taletiden
+        spendTime.format = "Brukt tid: 00:%s" // Setter formatet for taletiden
+        spendTime.start() // Starter taletiden
     }
-
-    // Listener for the event on touching ovals
-    @SuppressLint("ClickableViewAccessibility") // Suppress the warning about the onTouch function
-    private fun setOnTouchListeners(myOnTouchListener: MyOnTouchListener) {
-        myOrangeOval.setOnTouchListener(myOnTouchListener) // Set the listener for the orange oval
-        myBlueOval.setOnTouchListener(myOnTouchListener) // Set the listener for the blue oval
-        myRedOval.setOnTouchListener(myOnTouchListener) // Set the listener for the red oval
+    @SuppressLint("ClickableViewAccessibility") // Suppreserer en advarsel  for å bruke onTouchListener
+    private fun setOnTouchListeners(myOnTouchListener: MyOnTouchListener) { // Setter lytter for touch events på ovals
+        myOrangeOval.setOnTouchListener(myOnTouchListener)
+        myBlueOval.setOnTouchListener(myOnTouchListener)
+        myRedOval.setOnTouchListener(myOnTouchListener)
     }
-
-    // Listener for the event on dragging ovals
-    private fun setDragListeners(myOnDragListener: MyOnDragListener) {
+    private fun setDragListeners(myOnDragListener: MyOnDragListener) { // Setter lytter for drag events på tårnene
         tower1.setOnDragListener(myOnDragListener)
         tower2.setOnDragListener(myOnDragListener)
         tower3.setOnDragListener(myOnDragListener)
     }
     //
-    private fun setTagsForOvals() {
+    private fun setTagsForOvals() { // Setter tagger for ovals
         myOrangeOval.tag = R.drawable.orange_ring
         myBlueOval.tag = R.drawable.blue_ring
         myRedOval.tag = R.drawable.red_ring
     }
-
-    // Function that initializes the variables and find by the id in the layout
-    private fun initVariables() {
+    private fun initVariables() { // Initialiserer variablene for å kunne bruke dem i hele klassen
         moves = 0
         tower1 = this.findViewById(R.id.linear1)
         tower2 = this.findViewById(R.id.linear2)
@@ -98,20 +91,17 @@ class MainActivity : AppCompatActivity() {
         myRedOval = this.findViewById(R.id.redRing)
 
     }
-
-    // Listener for the event on touching ovals
-    inner class MyOnTouchListener: View.OnTouchListener {
-        @SuppressLint("ClickableViewAccessibility") // Suppress the warning about the onTouch function
+    inner class MyOnTouchListener: View.OnTouchListener { // inner klasse som implementerer OnTouchListener for å lytte på touch events
+        @SuppressLint("ClickableViewAccessibility") // Suppreserer en advarsel  for å bruke onTouchListener
         override fun onTouch(viewToBeDragged: View, motionEvent: MotionEvent): Boolean {
 
             val owner = viewToBeDragged.parent as LinearLayout
             val top = owner.getChildAt(0)
-            return if (viewToBeDragged == top || owner.childCount == 1) {
-                // Create a new ClipData.Item from the ImageView object's tag.
+            return if (viewToBeDragged == top || owner.childCount == 1) { // Sjekker om ovalen er øverst på tårnet
                 val item = ClipData.Item(viewToBeDragged.tag as? CharSequence)
-                // Create a new ClipData using the tag as a label, the plain text MIME type, and
-                // the already-created item. This creates a new ClipDescription object within the
-                // ClipData and sets its MIME type to "text/plain".
+                // Lag en ny ClipData ved å bruke taggen som en etikett, ren tekst MIME-type og
+                // det allerede opprettede elementet. Dette oppretter et nytt ClipDescription-objekt i
+                // ClipData og setter MIME-typen til "text/plain".
                 val dragData = ClipData(
                     viewToBeDragged.tag as? CharSequence,
                     arrayOf(ClipDescription.MIMETYPE_TEXT_PLAIN),
@@ -128,37 +118,37 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             else {
-                Toast.makeText(this@MainActivity, getString(R.string.you_can_drag_only_top), Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, getString(R.string.you_can_drag_only_top),
+                    Toast.LENGTH_SHORT).show() // Viser en toast med en melding
                 false
             }
 
         }
 
     }
-
-    // Listener for the event on dragging ovals
-    inner class MyOnDragListener: View.OnDragListener {
-        override fun onDrag(view: View, dragEvent: DragEvent): Boolean {
+    inner class MyOnDragListener: View.OnDragListener { // inner klasse som implementerer OnDragListener for å lytte på drag events
+        override fun onDrag(view: View, dragEvent: DragEvent): Boolean { // overriden metode som lytter på drag events
 
             val action = dragEvent.action
             val receiveContainer = view as LinearLayout
 
-            when (action) { // Check the action of the drag event
-                DragEvent.ACTION_DRAG_STARTED -> { // If the drag event is started
+            when (action) { // Sjekker hvilken drag event som har skjedd
+                DragEvent.ACTION_DRAG_STARTED -> { // hvis drag event er startet
+                    return true
                 }
-                DragEvent.ACTION_DRAG_ENTERED -> { // If the drag event is entering to other tower space
+                DragEvent.ACTION_DRAG_ENTERED -> { // hvis drag event er startet og er innenfor tårnet
                     view.background = AppCompatResources.getDrawable(this@MainActivity, R.drawable.tower_shape_droptarget)
                 }
-                DragEvent.ACTION_DRAG_EXITED -> { // If the drag event is exiting from the current tower space
+                DragEvent.ACTION_DRAG_EXITED -> { // hvis drag event er startet og er utenfor tårnet
 
                     view.background = AppCompatResources.getDrawable(this@MainActivity, R.drawable.tower_shape)
                 }
-                DragEvent.ACTION_DROP -> { // If the drag event is dropped
+                DragEvent.ACTION_DROP -> { // hvis drag event er sluppet
 
                     val topElement: View? = receiveContainer.getChildAt(0) ?: null
                     val draggedRing = dragEvent.localState as ImageView
 
-                    if (topElement == null) {
+                    if (topElement == null) { // hvis tårnet er tomt så legg ovalen på toppen
                         val parentLayout = draggedRing.parent as LinearLayout
                         parentLayout.removeView(draggedRing)
                         receiveContainer.addView(draggedRing)
@@ -166,7 +156,7 @@ class MainActivity : AppCompatActivity() {
                         dragExited = true
                         return true }
                     else {
-                        if (topElement.width > draggedRing.width) {
+                        if (topElement.width > draggedRing.width) { // hvis ovalen som er på toppen er større enn ovalen som skal legges på toppen
                             val parentLayout = draggedRing.parent as LinearLayout
                             parentLayout.removeView(draggedRing)
                             receiveContainer.addView(draggedRing, 0)
@@ -177,46 +167,39 @@ class MainActivity : AppCompatActivity() {
                         return false
                     }
                 }
-                DragEvent.ACTION_DRAG_ENDED -> { // If the drag event is ended
+                DragEvent.ACTION_DRAG_ENDED -> { // hvis drag event er sluttet og ovalen har migrert til et annet tårn
 
-                    if (dragExited) { // If the drag event is ended and the oval has migrated to another tower space
-                        moves += 1 // Increase the number of moves
-                        movesText.text = getString(R.string.set_moves_text, moves) // Set the text of the moves text view
-                        dragExited = false // Set the dragExited variable to false (Now any oval has not migrated to another tower space)
+                    if (dragExited) { // hvis ovalen har migrert til et annet tårn så øk antall trekk
+                        moves += 1
+                        movesText.text = getString(R.string.set_moves_text, moves)
+                        dragExited = false // set dragExited til false for å kunne øke antall trekk neste gang
                     }
-                    view.background = AppCompatResources.getDrawable(this@MainActivity, R.drawable.tower_shape)
+                    view.background = AppCompatResources.getDrawable(this@MainActivity, R.drawable.tower_shape) // set bakgrunnsfarge til tårnet til default bakgrunnsfarge
                 }
-                else -> {}
+                else -> {} // hvis ingen av de andre drag eventene har skjedd så gjør ingenting
 
             }
             return true
         }
     }
-
-    // Function to check if the game is finished
-    private fun isGameFinished(receiveContainer: LinearLayout) {
+    private fun isGameFinished(receiveContainer: LinearLayout) { // funksjon som sjekker om spillet er ferdig og viser en dialog hvis spillet er ferdig
         if (receiveContainer == tower3) {
             if (receiveContainer.childCount > 2) {
                 finishProgram()
             }
         }
     }
+    private fun finishProgram() { // funksjon som viser en dialog hvis spillet er ferdig
 
-    // Function to finish the game
-    private fun finishProgram() {
-
-        moves += 1 // Increase the last move
+        moves += 1 // øk antall trekk med 1 fordi det mistes et trekk når spillet er ferdig
         movesText.text = getString(R.string.set_moves_text, moves)
-        tower3.background = AppCompatResources.getDrawable(this, R.drawable.tower_shape) //
-        // Set the background of the tower3 to the default background
+        tower3.background = AppCompatResources.getDrawable(this, R.drawable.tower_shape)
         removeGameListeners()
         endGamingDialog = EndGamingDialogue()
         endGamingDialog.show(supportFragmentManager, "EndDialogGaming")
     }
-
-    // Function to remove the listeners
-    @SuppressLint("ClickableViewAccessibility")
-    private fun removeGameListeners() {
+    @SuppressLint("ClickableViewAccessibility") // fjerner warning for at on touch listener er satt på en view
+    private fun removeGameListeners() { // funksjon som fjerner alle listeners for å ikke kunne endre på tårnene og ovalene når spillet er ferdig
         tower1.setOnDragListener(null)
         tower2.setOnDragListener(null)
         tower3.setOnDragListener(null)
@@ -227,40 +210,27 @@ class MainActivity : AppCompatActivity() {
         spendTime.stop()
     }
 
-    // Class to create the shadow of the oval
     private class MyDragShadowBuilder(v: View) : View.DragShadowBuilder(v) {
+        // inner klasse som lager en drag shadow for ovalene som skal dras rundt på skjermen
+        // og legges på tårnene når de dras over tårnene og slippes der de skal legges på tårnene
 
         private val shadow: Drawable = AppCompatResources.getDrawable(v.context, v.tag as Int)!!
 
-        // Defines a callback that sends the drag shadow dimensions and touch point
-        // back to the system.
+        // Definerer en tilbakeringing som sender dragskyggedimensjonene og berøringspunktet
+        // tilbake til systemet.
         override fun onProvideShadowMetrics(size: Point, touch: Point) {
 
-            // Set the width of the shadow to half the width of the original View.
             val width: Int = view.width
-
-            // Set the height of the shadow to half the height of the original View.
             val height: Int = view.height
-
-            // The drag shadow is a ColorDrawable. This sets its dimensions to be the
-            // same as the Canvas that the system provides. As a result, the drag shadow
-            // fills the Canvas.
-
             shadow.setBounds(0, 0, width, height)
-
-            // Set the size parameter's width and height values. These get back to
-            // the system through the size parameter.
             size.set(width, height)
-
-            // Set the touch point's position to be in the middle of the drag shadow.
-            touch.set(width / 2, height / 2)
+            touch.set(width / 2, height / 2) // Berøringspunktet er midten av dragskyggen.
         }
 
-        // Defines a callback that draws the drag shadow in a Canvas that the system
-        // constructs from the dimensions passed to onProvideShadowMetrics().
+        // Definerer en tilbakeringing som sender dragskyggen til systemet.
         override fun onDrawShadow(canvas: Canvas) {
 
-            // Draw the ColorDrawable on the Canvas passed in from the system.
+            // Tegner dragskyggen.
             shadow.draw(canvas)
         }
     }
